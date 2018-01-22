@@ -19,25 +19,96 @@ ENV https_proxy ${HTTP_PROXY}
 # ==============================================================================
 
 WORKDIR /
-RUN echo deb http://httpredir.debian.org/debian jessie main non-free > /etc/apt/sources.list
-RUN echo deb http://httpredir.debian.org/debian jessie-updates main non-free >> /etc/apt/sources.list
-RUN echo deb http://security.debian.org/ jessie/updates main >> /etc/apt/sources.list
-RUN if [ -n "$HTTP_PROXY" ]; then echo 'Acquire::http::proxy "'$HTTP_PROXY'";' > /etc/apt/apt.conf.d/80proxy; fi
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get -yV install \
-	apt-utils daemon gcc make cmake python-paramiko python-lxml python-simplejson \
-	python-matplotlib python-serial python-yaml python-openpyxl python-requests \
-	libtool xmlstarlet autoconf automake rsync openjdk-7-jre openjdk-7-jdk iperf \
-	netperf netpipe-tcp sshpass wget git diffstat sudo net-tools vim curl \
-	inotify-tools g++ bzip2 bc libaio-dev gettext pkg-config libglib2.0-dev \
-	time python-pip python-xmltodict at minicom lzop bsdmainutils u-boot-tools \
-	mc netcat lava-tool openssh-server python-parsedatetime \
-	libsdl1.2-dev libcairo2-dev libxmu-dev libxmuu-dev
+COPY frontend-install/apt/sources/fuego-debian-jessie.list \
+        /etc/apt/sources.list.d/fuego-debian-jessie.list
+RUN if [ -n "$HTTP_PROXY" ]; then \
+        echo 'Acquire::http::proxy "'$HTTP_PROXY'";' > /etc/apt/apt.conf.d/80proxy; \
+    fi && \
+    DEBIAN_FRONTEND=noninteractive apt-get update && \
+    apt-get -yV install \
+        apt-utils \
+        at \
+        autoconf \
+        automake \
+        bc \
+        bsdmainutils \
+        bzip2 \
+        cmake \
+        curl \
+        daemon \
+        diffstat \
+        g++ \
+        gcc \
+        gettext \
+        git \
+        inotify-tools \
+        iperf \
+        lava-tool \
+        libaio-dev \
+        libcairo2-dev \
+        libglib2.0-dev \
+        libsdl1.2-dev \
+        libtool \
+        libxmu-dev \
+        libxmuu-dev \
+        lzop \
+        make \
+        mc \
+        minicom \
+        net-tools \
+        netcat \
+        netperf \
+        netpipe-tcp \
+        openjdk-7-jdk \
+        openjdk-7-jre \
+        openssh-server \
+        pkg-config \
+        python-lxml \
+        python-matplotlib \
+        python-openpyxl \
+        python-paramiko \
+        python-parsedatetime \
+        python-pip \
+        python-requests \
+        python-serial \
+        python-simplejson \
+        python-xmltodict \
+        python-yaml \
+        rsync \
+        sshpass \
+        sudo \
+        time \
+        u-boot-tools \
+        vim \
+        wget \
+        xmlstarlet && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN pip install python-jenkins==0.4.14
-RUN pip install filelock
-RUN /bin/bash -c 'echo "dash dash/sh boolean false" | debconf-set-selections ; DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash'
-RUN if [ -n "$HTTP_PROXY" ]; then echo "use_proxy = on" >> /etc/wgetrc; fi
-RUN if [ -n "$HTTP_PROXY" ]; then echo -e "http_proxy=$HTTP_PROXY\nhttps_proxy=$HTTP_PROXY" >> /etc/environment; fi
+RUN echo dash dash/sh boolean false | debconf-set-selections ; DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash && \
+    if [ -n "$HTTP_PROXY" ]; then \
+        echo "use_proxy = on" >> /etc/wgetrc; \
+        echo -e "http_proxy=$HTTP_PROXY\nhttps_proxy=$HTTP_PROXY" >> /etc/environment; \
+    fi
+
+RUN pip install \
+        filelock \
+        python-jenkins==0.4.14
+
+# TODO: Move toolchain-related instalation steps to a derivate image, like fuego:${version}-arhmhf
+RUN echo deb http://emdebian.org/tools/debian/ jessie main > /etc/apt/sources.list.d/crosstools.list && \
+    curl http://emdebian.org/tools/debian/emdebian-toolchain-archive.key | apt-key add - && \
+    dpkg --add-architecture armhf && \
+    DEBIAN_FRONTEND=noninteractive apt-get update && \
+    apt-get -yV install \
+        binutils-arm-linux-gnueabihf \
+        cpp-arm-linux-gnueabihf \
+        crossbuild-essential-armhf \
+        gcc-arm-linux-gnueabihf && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN pip install \
+        filelock \
+        python-jenkins==0.4.14
 
 # ==============================================================================
 # Install Jenkins with the same UID/GID as the host user
@@ -124,13 +195,6 @@ RUN ln -s /fuego-ro/scripts/fuego-lava-target-teardown /usr/local/bin
 # not mounted, yet
 #RUN echo "fuego-create-node --board raspberrypi3" >> /root/firststart.sh
 #RUN echo "fuego-create-jobs --board raspberrypi3 --testplan testplan_docker --distrib nosyslogd.dist" >> /root/firststart.sh
-
-RUN echo "deb http://emdebian.org/tools/debian/ jessie main" > /etc/apt/sources.list.d/crosstools.list
-RUN dpkg --add-architecture armhf
-RUN curl http://emdebian.org/tools/debian/emdebian-toolchain-archive.key | sudo apt-key add -
-RUN DEBIAN_FRONTEND=noninteractive apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get -yV install crossbuild-essential-armhf cpp-arm-linux-gnueabihf gcc-arm-linux-gnueabihf binutils-arm-linux-gnueabihf
-
 
 # ==============================================================================
 # Setup startup command

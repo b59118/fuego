@@ -1,0 +1,2 @@
+deb http://httpredir.debian.org/debian jessie main non-free
+deb http://httpredir.debian.org/debian jessie-updates main non-free
