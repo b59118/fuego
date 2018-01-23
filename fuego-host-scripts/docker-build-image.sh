@@ -10,4 +10,9 @@ else
 	JENKINS_GID=$(id -g $USER)
 fi
 
-sudo docker build -t ${DOCKERIMAGE} --build-arg HTTP_PROXY=$http_proxy --build-arg uid=$JENKINS_UID --build-arg gid=$JENKINS_GID .
+sudo docker build -t ${DOCKERIMAGE} \
+    --build-arg http_proxy=${http_proxy} \
+    --build-arg https_proxy=${https_proxy} \
+    --build-arg uid=${JENKINS_UID} \
+    --build-arg gid=${JENKINS_GID} \
+    .

@@ -7,24 +7,13 @@ FROM debian:jessie
 MAINTAINER tim.bird@sony.com
 
 # ==============================================================================
-# Proxy variables
-# ==============================================================================
-
-ARG HTTP_PROXY
-ENV http_proxy ${HTTP_PROXY}
-ENV https_proxy ${HTTP_PROXY}
-
-# ==============================================================================
 # Prepare basic image
 # ==============================================================================
 
 WORKDIR /
 COPY frontend-install/apt/sources/fuego-debian-jessie.list \
         /etc/apt/sources.list.d/fuego-debian-jessie.list
-RUN if [ -n "$HTTP_PROXY" ]; then \
-        echo 'Acquire::http::proxy "'$HTTP_PROXY'";' > /etc/apt/apt.conf.d/80proxy; \
-    fi && \
-    DEBIAN_FRONTEND=noninteractive apt-get update && \
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get -yV install \
         apt-utils \
         at \
@@ -84,11 +73,7 @@ RUN if [ -n "$HTTP_PROXY" ]; then \
         xmlstarlet && \
     rm -rf /var/lib/apt/lists/*
 
-RUN echo dash dash/sh boolean false | debconf-set-selections ; DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash && \
-    if [ -n "$HTTP_PROXY" ]; then \
-        echo "use_proxy = on" >> /etc/wgetrc; \
-        echo -e "http_proxy=$HTTP_PROXY\nhttps_proxy=$HTTP_PROXY" >> /etc/environment; \
-    fi
+RUN echo dash dash/sh boolean false | debconf-set-selections ; DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
 
 RUN pip install \
         filelock \

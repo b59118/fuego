@@ -28,5 +28,7 @@ sudo docker create -it --name ${DOCKERCONTAINER} \
     -v $DIR/../fuego-rw:/fuego-rw \
     -v $DIR/../fuego-ro:/fuego-ro:ro \
     -v $DIR/../../fuego-core:/fuego-core:ro \
+    -e http_proxy=${http_proxy} \
+    -e https_proxy=${https_proxy:-$http_proxy} \
     --net="host" ${DOCKERIMAGE} || \
     echo "Could not create fuego-container. See error messages."
