@@ -10,10 +10,11 @@ MAINTAINER tim.bird@sony.com
 # Prepare basic image
 # ==============================================================================
 
-WORKDIR /
+ARG DEBIAN_FRONTEND=noninteractive
+
 COPY frontend-install/apt/sources/fuego-debian-jessie.list \
         /etc/apt/sources.list.d/fuego-debian-jessie.list
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
+RUN apt-get update && \
     apt-get -yV install \
         apt-utils \
         at \
@@ -71,9 +72,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
         vim \
         wget \
         xmlstarlet && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN echo dash dash/sh boolean false | debconf-set-selections ; DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
+    rm -rf /var/lib/apt/lists/* && \
+    echo dash dash/sh boolean false | debconf-set-selections && \
+    dpkg-reconfigure dash
 
 RUN pip install \
         filelock \
@@ -83,7 +84,7 @@ RUN pip install \
 RUN echo deb http://emdebian.org/tools/debian/ jessie main > /etc/apt/sources.list.d/crosstools.list && \
     curl http://emdebian.org/tools/debian/emdebian-toolchain-archive.key | apt-key add - && \
     dpkg --add-architecture armhf && \
-    DEBIAN_FRONTEND=noninteractive apt-get update && \
+    apt-get update && \
     apt-get -yV install \
         binutils-arm-linux-gnueabihf \
         cpp-arm-linux-gnueabihf \
