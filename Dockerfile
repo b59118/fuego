@@ -12,7 +12,7 @@ MAINTAINER tim.bird@sony.com
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-COPY frontend-install/apt/sources/fuego-debian-jessie.list \
+COPY setup/apt/sources/fuego-debian-jessie.list \
         /etc/apt/sources.list.d/fuego-debian-jessie.list
 RUN apt-get update && \
     apt-get -yV install \
@@ -103,8 +103,8 @@ ARG JENKINS_SHA=bfc226aabe2bb089623772950c4cc13aee613af1
 ARG JENKINS_URL=https://pkg.jenkins.io/debian-stable/binary/jenkins_${JENKINS_VERSION}_all.deb
 ENV JENKINS_HOME=/var/lib/jenkins
 
-RUN groupadd -g ${gid} ${group} && \
-    useradd -l -m -d "${JENKINS_HOME}" -u ${uid} -g ${gid} -G sudo -s /bin/bash ${user} && \
+RUN groupadd -g ${gid} jenkins && \
+    useradd -l -m -d "${JENKINS_HOME}" -u ${uid} -g ${gid} -G sudo -s /bin/bash jenkins && \
     curl -L -O ${JENKINS_URL} && \
     echo "${JENKINS_SHA} jenkins_${JENKINS_VERSION}_all.deb" | sha1sum -c - && \
     dpkg -i jenkins_${JENKINS_VERSION}_all.deb && \
@@ -114,26 +114,27 @@ RUN groupadd -g ${gid} ${group} && \
 # Post installation
 # ==============================================================================
 
-COPY frontend-install/setup/jenkins /setup/jenkins
+COPY setup/jenkins /setup/jenkins
 WORKDIR /setup/jenkins
 RUN ./setup.sh
 
 WORKDIR /setup/jenkins/plugins
 RUN ./install.sh
 
-COPY frontend-install/setup/serial /setup/serial
+COPY setup/tools /setup/tools
 WORKDIR /setup
 
 RUN git clone https://github.com/tbird20d/ttc.git /usr/local/src/ttc && \
-    ./serial/setup-ttc.sh
+    ./tools/setup-ttc.sh
 
+COPY setup/serial /setup/serial
 RUN git clone https://github.com/frowand/serio.git /usr/local/src/serio && \
     ./serial/setup-serio.sh
 
 RUN git clone https://github.com/tbird20d/serlogin.git /usr/local/src/serlogin && \
     ./serial/setup-serlogin.sh
 
-COPY frontend-install/setup/lava /setup/lava
+COPY setup/lava /setup/lava
 RUN ./lava/setup.sh
 
 COPY docs/fuego-docs.pdf $JENKINS_HOME/userContent/docs/fuego-docs.pdf
