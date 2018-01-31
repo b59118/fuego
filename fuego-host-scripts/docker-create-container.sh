@@ -17,6 +17,14 @@ if [ ! -d $DIR/../../fuego-core ]; then
    exit 1
 fi
 
+if [ "${UID}" == "0" ]; then
+	uid=$(id -u "${SUDO_USER}")
+	gid=$(id -g "${SUDO_USER}")
+else
+	uid="${UID}"
+	gid=$(id -g "${USER}")
+fi
+
 sudo docker create -it --name ${DOCKERCONTAINER} \
     -v /boot:/boot:ro \
     -v $DIR/../fuego-rw:/fuego-rw \
@@ -24,5 +32,7 @@ sudo docker create -it --name ${DOCKERCONTAINER} \
     -v $DIR/../../fuego-core:/fuego-core:ro \
     -e http_proxy=${http_proxy} \
     -e https_proxy=${https_proxy:-$http_proxy} \
+    -e UID=${uid} \
+    -e GID=${gid} \
     --net="host" ${DOCKERIMAGE} || \
     echo "Could not create fuego-container. See error messages."

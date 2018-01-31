@@ -96,16 +96,12 @@ RUN echo deb http://emdebian.org/tools/debian/ jessie main > /etc/apt/sources.li
 # Download and Install Jenkins
 # ==============================================================================
 
-ENV uid=1000
-ENV gid=${uid}
 ARG JENKINS_VERSION=2.32.1
 ARG JENKINS_SHA=bfc226aabe2bb089623772950c4cc13aee613af1
 ARG JENKINS_URL=https://pkg.jenkins.io/debian-stable/binary/jenkins_${JENKINS_VERSION}_all.deb
 ENV JENKINS_HOME=/var/lib/jenkins
 
-RUN groupadd -g ${gid} jenkins && \
-    useradd -l -m -d "${JENKINS_HOME}" -u ${uid} -g ${gid} -G sudo -s /bin/bash jenkins && \
-    curl -L -O ${JENKINS_URL} && \
+RUN curl -L -O ${JENKINS_URL} && \
     echo "${JENKINS_SHA} jenkins_${JENKINS_VERSION}_all.deb" | sha1sum -c - && \
     dpkg -i jenkins_${JENKINS_VERSION}_all.deb && \
     rm jenkins_${JENKINS_VERSION}_all.deb
@@ -143,4 +139,6 @@ COPY docs/fuego-docs.pdf $JENKINS_HOME/userContent/docs/fuego-docs.pdf
 # Setup startup command
 # ==============================================================================
 
-ENTRYPOINT service jenkins start && service netperf start && /bin/bash
+WORKDIR /
+COPY setup/entrypoint.sh /
+ENTRYPOINT ["/entrypoint.sh"]
