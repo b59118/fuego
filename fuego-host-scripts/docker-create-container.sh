@@ -25,6 +25,9 @@ else
 	gid=$(id -g "${USER}")
 fi
 
+sed -i "s/docker_jenkins_uid=1000/docker_jenkins_uid=$uid/" $DIR/../fuego-ro/conf/fuego.conf
+sed -i "s/docker_jenkins_gid=500/docker_jenkins_gid=$gid/" $DIR/../fuego-ro/conf/fuego.conf
+
 sudo docker create -it --name ${DOCKERCONTAINER} \
     -v /boot:/boot:ro \
     -v $DIR/../fuego-rw:/fuego-rw \
@@ -32,7 +35,5 @@ sudo docker create -it --name ${DOCKERCONTAINER} \
     -v $DIR/../../fuego-core:/fuego-core:ro \
     -e http_proxy=${http_proxy} \
     -e https_proxy=${https_proxy:-$http_proxy} \
-    -e UID=${uid} \
-    -e GID=${gid} \
     --net="host" ${DOCKERIMAGE} || \
     echo "Could not create fuego-container. See error messages."

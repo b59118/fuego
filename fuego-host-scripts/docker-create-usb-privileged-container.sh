@@ -17,6 +17,17 @@ if [ ! -d $DIR/../../fuego-core ]; then
    exit 1
 fi
 
+if [ "${UID}" == "0" ]; then
+	uid=$(id -u "${SUDO_USER}")
+	gid=$(id -g "${SUDO_USER}")
+else
+	uid="${UID}"
+	gid=$(id -g "${USER}")
+fi
+
+sed -i "s/docker_jenkins_uid=1000/docker_jenkins_uid=$uid/" $DIR/../fuego-ro/conf/fuego.conf
+sed -i "s/docker_jenkins_gid=500/docker_jenkins_gid=$gid/" $DIR/../fuego-ro/conf/fuego.conf
+
 sudo docker create -it --name ${DOCKERCONTAINER} \
     --privileged \
     -v /boot:/boot:ro \
