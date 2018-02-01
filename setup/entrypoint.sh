@@ -1,16 +1,21 @@
 #!/bin/bash
 set -e
 
+. /fuego-ro/conf/fuego.conf
+
 function map_jenkins_uid_to_host() {
-    if [ "$(id -u jenkins)" = "${UID}" ]; then
+    if [ "$(id -u jenkins)" = "${docker_jenkins_uid}" ]; then
         return 0
     fi
 
-    echo "Remapping Fuego's jenkins uid=$(id -u jenkins) to uid=${UID}..."
+    DJUID=${docker_jenkins_uid}
+    DJGID=${docker_jenkins_gid}
 
-    usermod -u "${UID}" jenkins
-    groupmod -g "${GID}" jenkins
-    chown -R "${UID}":"${GID}" \
+    echo "Remapping Fuego's jenkins uid=$(id -u jenkins) to uid=${DJUID}..."
+
+    usermod -u "${DJUID}" jenkins
+    groupmod -g "${DJGID}" jenkins
+    chown -R "${DJUID}":"${DJGID}" \
         /var/lib/jenkins /var/cache/jenkins /var/log/jenkins /fuego-rw
 }
 
