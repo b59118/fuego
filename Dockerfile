@@ -13,7 +13,7 @@ MAINTAINER tim.bird@sony.com
 ARG DEBIAN_FRONTEND=noninteractive
 
 COPY setup/apt/sources/fuego-debian-jessie.list \
-        /etc/apt/sources.list.d/fuego-debian-jessie.list
+        /etc/apt/sources.list
 RUN apt-get update && \
     apt-get -yV install \
         apt-utils \
