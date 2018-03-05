@@ -30,6 +30,7 @@ sed -i "s/docker_jenkins_gid=500/docker_jenkins_gid=$gid/" $DIR/../fuego-ro/conf
 
 sudo docker create -it --name ${DOCKERCONTAINER} \
     --privileged \
+    -v /var/run/docker.sock:/var/run/docker.sock \
     -v /boot:/boot:ro \
     -v /dev/bus/usb:/dev/bus/usb \
     -v /dev/ttyACM0:/dev/ttyACM0 \

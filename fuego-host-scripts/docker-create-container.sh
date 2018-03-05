@@ -29,6 +29,7 @@ sed -i "s/docker_jenkins_uid=1000/docker_jenkins_uid=$uid/" $DIR/../fuego-ro/con
 sed -i "s/docker_jenkins_gid=500/docker_jenkins_gid=$gid/" $DIR/../fuego-ro/conf/fuego.conf
 
 sudo docker create -it --name ${DOCKERCONTAINER} \
+    -v /var/run/docker.sock:/var/run/docker.sock \
     -v /boot:/boot:ro \
     -v $DIR/../fuego-rw:/fuego-rw \
     -v $DIR/../fuego-ro:/fuego-ro:ro \
