@@ -1,8 +1,3 @@
-# ==============================================================================
-# WARNING: this Dockerfile assumes that the container will be created with
-# several volume bind mounts (see docker-create-container.sh)
-# ==============================================================================
-
 FROM debian:jessie
 MAINTAINER tim.bird@sony.com
 
@@ -107,7 +102,7 @@ ARG gid=${uid}
 RUN echo "Creating Jenkins user/group with uid:gid ${uid}:${gid}"
 
 RUN groupadd -g ${gid} jenkins && \
-    useradd -l -m -d "${JENKINS_HOME}" -u ${uid} -g ${gid} -G sudo -s /bin/bash jenkins && \
+    useradd -l -d "${JENKINS_HOME}" -u ${uid} -g ${gid} -G sudo -s /bin/bash jenkins && \
     curl -L -O ${JENKINS_URL} && \
     echo "${JENKINS_SHA} jenkins_${JENKINS_VERSION}_all.deb" | sha1sum -c - && \
     dpkg -i jenkins_${JENKINS_VERSION}_all.deb && \
@@ -165,6 +160,12 @@ RUN echo "jenkins ALL = (root) NOPASSWD:ALL" >> /etc/sudoers
 # Post installation
 # ==============================================================================
 
+ENV FUEGO_HOME=/var/fuego_home
+
+COPY setup/fuego /setup/fuego
+WORKDIR /setup/fuego
+RUN ./setup.sh
+
 COPY setup/jenkins /setup/jenkins
 WORKDIR /setup/jenkins
 RUN ./setup.sh
@@ -188,7 +189,10 @@ RUN git clone https://github.com/tbird20d/serlogin.git /usr/local/src/serlogin &
 COPY setup/lava /setup/lava
 RUN ./lava/setup.sh
 
-COPY docs/fuego-docs.pdf $JENKINS_HOME/userContent/docs/fuego-docs.pdf
+ENV RESOURCES=/resources
+COPY ./fuego-rw $RESOURCES/fuego-rw
+COPY ./fuego-ro $RESOURCES/fuego-ro
+COPY ./docs/fuego-docs.pdf $JENKINS_HOME/userContent/docs/fuego-docs.pdf
 
 # ==============================================================================
 # Setup startup command

@@ -37,7 +37,15 @@ wait_for_jenkins 1
 
 rm "$JENKINS_HOME/plugins/flot/flot/mod.js"
 ln -s /fuego-core/engine/scripts/mod.js "$JENKINS_HOME/plugins/flot/flot/mod.js"
+
+mkdir -p "${JENKINS_HOME}/userContent/docs"
+cp "${RESOURCES}/docs/fuego-docs.pdf" "${JENKINS_HOME}/userContent/docs/fuego-docs.pdf"
+
 ln -s /fuego-rw/logs "$JENKINS_HOME/userContent/fuego.logs"
 ln -s /fuego-core/engine/scripts/ftc /usr/local/bin/
 
 chown -R jenkins:jenkins "$JENKINS_HOME/"
+
+# Cleanup
+service jenkins stop
+rm -rf /var/cache/jenkins/*

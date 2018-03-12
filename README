@@ -1,93 +1,130 @@
-Fuego
-=======================
+IMPORTANT: This image is still work-in-progress and has not been tested
+thoroughly. Please use the official Fuego repository
+(https://bitbucket.org/tbird20d/fuego) and the instructions from
+http://fuegotest.org/wiki/FrontPage for running Fuego. Do not use this image
+until this message is removed.
 
-Installing Fuego to a docker container
--------------------------------------------------------------------------------
-Run install.sh from the top directory. This will launch the ``docker build''
-command.  You can modify the Dockerfile to suit your needs.
+## Fuego
 
-Running
--------------------------------------------------------------------------------
-Issue the following commands from the top directory:
+Fuego Test Framework Docker Image
 
-  fuego-host-scripts/docker-create-container.sh
-  fuego-host-scripts/docker-start-container.sh
+### Running
 
-Once the container is started, a web interface to the test system will
-be available at: http://localhost:8080/fuego
+All fuego files from a given session will be stored into a special
+directory in the container (`/var/fuego_home`) that may be mapped into a
+volume or bind-mounted into a directory on the host, for persistence.
 
-The shell used to start the container will enter a shell inside the
-container.  If you exit that shell, the container will stop, and you
-will be returned to the host shell.
+Nothing prevents you from running fuego without mapping `/var/fuego_home`
+to your host, however, by doing that, if the container is removed, all
+your temporary files, logs, tests results will be lost.
 
-Configuration
--------------------------------------------------------------------------------
-Please see the docs (docs/fuego-docs.pdf) for configuration and usage.
+#### Standalone
 
-docker-create-containter.sh configures Docker to use the host network
-(using the --net="host" option).
-Please see the Docker manual for different network setup options.
+For running fuego without persistence (not recommended), simply run the image
+with the following arguments:
 
-Updating fuego-core and fuego
--------------------------------------------------------------------------------
-The repository fuego-core is mounted as a external docker volume. All you
-need to do is to issue a ``git pull'' from the host directory. This will
-update the following components:
-- Fuego engine
-- tests
-- overlays
+```
+docker run -it \
+    -p 8080:8080 \
+    fuegotest/fuego:latest
+```
 
-Board configurations and toolchain setup can be updated by doing ``git pull''
-from within the fuego host directory.
+If you're behind an http_proxy, please also provide the proper
+environment variables.
 
-Updating the Jenkins version
--------------------------------------------------------------------------------
+```
+docker run -it \
+    -p 8080:8080 \
+    -e http_proxy=${http_proxy} \
+    -e https_proxy=${https_proxy:-$http_proxy} \
+    fuegotest/fuego:latest
+```
 
-Modify the version and checksum
-    $ vi Dockerfile
-        ARG JENKINS_VERSION=2.32.1
-        ARG JENKINS_SHA=3cbe9b6d4d82c975642ea4409e21e087
+Depending on the tests that you're planning to execute, some specific
+mount-points or environment variables may be needed. If that's your case,
+simply pass those as necessary.
 
-Re-build the flot plugin
-    $ sudo apt-get install maven
-    $ vi pom.xml
-        -> change the jenkins version
-    $ mvn install
-    $ cp target/flot.hpi
+For example, for using Fuego to test Fuego itself, you will need to map
+your docker daemon socket as follows:
 
-Re-build Jenkins' config.xml (if necessary):
-    + Install fuego as usual with the new Jenkins version
-    + Manual configuration (click on 'Manage jenkins')
-        - configure system
-            + environment variables
-                FUEGO_CORE /fuego-core
-                FUEGO_RW /fuego-rw
-                FUEGO_RO /fuego-ro
-        - Configure global security
-            + plain text => safe html
-    + Copy the new config.xml (/var/lib/jenkins/config.xml) to frontend-install
 
-Rewrite Jobs config.xml (if necessary):
-    + Configure the job manually and save it
-    + Get the xml file
-         java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/fuego get-job docker.default.Benchmark.Dhrystone
-    + Modify ftc add-jobs (do_add_jobs()) as necessary
+```
+docker run -it \
+    -p 8080:8080 \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -e http_proxy=${http_proxy} \
+    -e https_proxy=${https_proxy:-$http_proxy} \
+    fuegotest/fuego:latest
+```
 
-Initial test
-------------
-You can use the docker container as a fuego target in order to confirm that
-the installation was successful.
+#### With Persistence
 
-# ftc add-nodes docker
-# ftc add-jobs -b docker -p testplan_docker
-# ftc add-jobs -b docker -t Benchmark.Dhrystone -s default
+For storing all the fuego files into a volume, that might be used to
+recover the state of fuego in another fuego container, simply add a new
+`-v` argument pointing to `/var/fuego_home` from your volume on the host,
+as follows:
 
-On the Jenkins interface, build the "docker.testplan_docker.batch" job.
-It will trigger the rest of the jobs. To remove the jobs use:
+```
+docker run -it \
+    -p 8080:8080 \
+    -v fuego-volume:/var/fuego_home \
+    fuegotest/fuego:latest
+```
 
-# ftc rm-jobs docker.testplan_docker.*.*
+Other arguments may be passed as needed (as explained in the previous
+section).
 
-License
--------------------------------------------------------------------------------
-Fuego is licensed under the 3-clause BSD license. Please refer to LICENSE
-for details. Jenkins is licensed under the MIT license.
+
+For some users, it may be convenient to bind mount `/var/fuego-home` onto
+the host, instead of using a volume (that's not directly accessible in
+the host). For doing that, just replace the volume name in the `-v`
+argument, given above, with the absolute path of your fuego directory on
+host. Please also provide the uid/gid of a user that has read/write
+access to that directory so that Fuego configures itself to be able to
+interact with that directory.
+
+
+Example with a specific uid/gid:
+
+```
+docker run -it \
+    -p 8080:8080 \
+    -v $(pwd)/host_fuego_home:/var/fuego_home \
+    -e JENKINS_UID=1000 \
+    -e JENKINS_GID=1000 \
+    fuegotest/fuego:latest
+```
+
+Example with the current user's uid/gid (most cases):
+
+```
+docker run -it \
+    -p 8080:8080 \
+    -v $(pwd)/host_fuego_home:/var/fuego_home \
+    -e JENKINS_UID=$(id -u) \
+    -e JENKINS_GID=$(id -g) \
+    fuegotest/fuego:latest
+```
+
+In the given mount-point (in the example $(pwd)/host_fuego_home) you will
+find the following tree of directories:
+
+```
+host_fuego_home
+├── fuego-core # Core Fuego Resources
+├── fuego-ro # Additional Test resources
+├── fuego-rw # Tests Results and Logs
+└── var # Jenkins Home
+    ├── lib
+    │   └── jenkins
+```
+
+If any of the root directories is empty, it will be filled up
+automatically by Fuego with the default data. For example, if fuego-core
+is empty in the mount-point that you provided, fuego-core will be cloned
+from our repos (what may take a little long).
+
+Fuego only checks for the existence of the directories in order to
+overwrite them, so please make sure you use a directory that has been
+filled up (at least for the first time) with Fuego, and use our tutorials
+to avoid corruption when making changes to those directories.
