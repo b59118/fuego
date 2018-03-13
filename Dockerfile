@@ -161,6 +161,9 @@ RUN echo "jenkins ALL = (root) NOPASSWD:ALL" >> /etc/sudoers
 # ==============================================================================
 
 ENV FUEGO_HOME=/var/fuego_home
+ENV RESOURCES=/resources
+
+COPY ./resources ${RESOURCES}
 
 COPY setup/fuego /setup/fuego
 WORKDIR /setup/fuego
@@ -188,11 +191,6 @@ RUN git clone https://github.com/tbird20d/serlogin.git /usr/local/src/serlogin &
 
 COPY setup/lava /setup/lava
 RUN ./lava/setup.sh
-
-ENV RESOURCES=/resources
-COPY ./fuego-rw $RESOURCES/fuego-rw
-COPY ./fuego-ro $RESOURCES/fuego-ro
-COPY ./docs/fuego-docs.pdf $JENKINS_HOME/userContent/docs/fuego-docs.pdf
 
 # ==============================================================================
 # Setup startup command
