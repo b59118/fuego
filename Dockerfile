@@ -75,17 +75,18 @@ RUN pip install \
         filelock \
         python-jenkins==0.4.14
 
+# INFO: Commented out to remove toolchain instala from emdebian, that was causing conflicts
 # TODO: Move toolchain-related instalation steps to a derivate image, like fuego:${version}-arhmhf
-RUN echo deb http://emdebian.org/tools/debian/ jessie main > /etc/apt/sources.list.d/crosstools.list && \
-    curl http://emdebian.org/tools/debian/emdebian-toolchain-archive.key | apt-key add - && \
-    dpkg --add-architecture armhf && \
-    apt-get update && \
-    apt-get -yV install \
-        binutils-arm-linux-gnueabihf \
-        cpp-arm-linux-gnueabihf \
-        crossbuild-essential-armhf \
-        gcc-arm-linux-gnueabihf && \
-    rm -rf /var/lib/apt/lists/*
+# RUN echo deb http://emdebian.org/tools/debian/ jessie main > /etc/apt/sources.list.d/crosstools.list && \
+#     curl http://emdebian.org/tools/debian/emdebian-toolchain-archive.key | apt-key add - && \
+#     dpkg --add-architecture armhf && \
+#     apt-get update && \
+#     apt-get -yV install \
+#         binutils-arm-linux-gnueabihf \
+#         cpp-arm-linux-gnueabihf \
+#         crossbuild-essential-armhf \
+#         gcc-arm-linux-gnueabihf && \
+#     rm -rf /var/lib/apt/lists/*
 
 # ==============================================================================
 # Download and Install Jenkins
