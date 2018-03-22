@@ -21,6 +21,9 @@ function map_jenkins_uid_to_host() {
     usermod -u "${JENKINS_UID}" jenkins
     groupmod -g "${JENKINS_GID}" jenkins
 
+    rm -rf /var/cache/jenkins
+    mkdir -p /var/cache/jenkins
+
     chown -R -L "${JENKINS_UID}":"${JENKINS_GID}" \
         /var/cache/jenkins /var/log/jenkins
 }

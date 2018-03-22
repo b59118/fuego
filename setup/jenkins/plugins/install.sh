@@ -48,4 +48,3 @@ chown -R jenkins:jenkins "$JENKINS_HOME/"
 
 # Cleanup
 service jenkins stop
-rm -rf /var/cache/jenkins/*
