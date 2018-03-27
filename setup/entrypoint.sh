@@ -120,7 +120,7 @@ service jenkins start
 service netperf start
 
 if [ $# -eq 0 ]; then
-    exec su - jenkins
+    gosu jenkins:jenkins /bin/bash
 else
-    exec su - jenkins -c $@
+    gosu jenkins:jenkins "$@"
 fi

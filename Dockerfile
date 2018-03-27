@@ -67,6 +67,7 @@ RUN apt-get update && \
         vim \
         wget \
         xmlstarlet && \
+    apt-get -t jessie-backports install gosu && \
     rm -rf /var/lib/apt/lists/* && \
     echo dash dash/sh boolean false | debconf-set-selections && \
     dpkg-reconfigure dash
