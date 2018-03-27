@@ -97,6 +97,8 @@ ARG JENKINS_VERSION=2.32.1
 ARG JENKINS_SHA=bfc226aabe2bb089623772950c4cc13aee613af1
 ARG JENKINS_URL=https://pkg.jenkins.io/debian-stable/binary/jenkins_${JENKINS_VERSION}_all.deb
 ENV JENKINS_HOME=/var/lib/jenkins
+env JENKINS_CACHE=/var/cache/jenkins
+env JENKINS_LOG=/var/log/jenkins/jenkins.log
 
 ARG uid=1009
 ARG gid=${uid}

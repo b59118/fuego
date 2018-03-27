@@ -21,11 +21,11 @@ function map_jenkins_uid_to_host() {
     usermod -u "${JENKINS_UID}" jenkins
     groupmod -g "${JENKINS_GID}" jenkins
 
-    rm -rf /var/cache/jenkins
-    mkdir -p /var/cache/jenkins
+    rm -rf "${JENKINS_CACHE}"
+    mkdir -p "${JENKINS_CACHE}"
 
     chown -R -L "${JENKINS_UID}":"${JENKINS_GID}" \
-        /var/cache/jenkins /var/log/jenkins
+        "${JENKINS_CACHE}" "${JENKINS_LOG}"
 }
 
 function check_ownership {
@@ -42,6 +42,11 @@ function check_ownership {
     return 0
 }
 
+function print_path() {
+    # Remove double slashes that may exist on the path
+    readlink -m "${1}"
+}
+
 function collect_if_not_present() {
     source="${1}"
     dest="${2}"
@@ -55,11 +60,12 @@ function collect_if_not_present() {
     owner_uid=$(id -u "${owner}")
 
     if [ ! -e "${dest}" ]; then
+        echo "Generating $(print_path ${dest})..."
         mkdir -p "${dest_dirname}"
         cp -r "$source" "${dest}"
         chown -R "${owner}:${owner}" "${dest}"
     else
-        echo "Using pre-existing ${dest}"
+        echo "Using pre-existing $(print_path ${dest})"
         if ! check_ownership jenkins "${dest}" ; then
             echo "Warning: Some files from ${dest} are not owned by ${owner}."\
                  "The user ${owner} (uid ${owner_uid}) may not be able"\
@@ -103,6 +109,14 @@ function collect_resources() {
     collect_if_not_present "${JENKINS_HOME}" "${FUEGO_HOME}/${JENKINS_HOME}" jenkins
     rm -rf "${JENKINS_HOME}"
     ln -s "${FUEGO_HOME}/${JENKINS_HOME}" "${JENKINS_HOME}"
+
+    collect_if_not_present "${JENKINS_CACHE}" "${FUEGO_HOME}/${JENKINS_CACHE}" jenkins
+    rm -rf "${JENKINS_CACHE}"
+    ln -s "${FUEGO_HOME}/${JENKINS_CACHE}" "${JENKINS_CACHE}"
+
+    collect_if_not_present "${JENKINS_LOG}" "${FUEGO_HOME}/${JENKINS_LOG}" jenkins
+    rm -rf "${JENKINS_LOG}"
+    ln -s "${FUEGO_HOME}/${JENKINS_LOG}" "${JENKINS_LOG}"
 
     if [ -e /fuego-ro/conf/fuego.conf ] ; then
         . /fuego-ro/conf/fuego.conf
