@@ -131,8 +131,10 @@ RUN apt-get update && \
         gnupg2 \
         python3 \
         python3-pip \
+        python3-pillow \
         software-properties-common && \
-    pip3 install \
+    rm -rf /var/lib/apt/lists/* && \
+    python3 -m pip install \
         docker \
         pexpect \
         selenium
