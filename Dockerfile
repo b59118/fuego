@@ -129,6 +129,7 @@ RUN apt-get update && \
         chromium \
         curl \
         gnupg2 \
+        imagemagick \
         python3 \
         python3-pip \
         python3-pillow \
